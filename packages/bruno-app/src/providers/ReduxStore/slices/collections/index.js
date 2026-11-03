@@ -21,9 +21,8 @@ import { applyScriptEnvVars, getScriptModifiedKeys, preserveVariableUids } from 
 import { getSubdirectoriesFromRoot } from 'utils/common/platform';
 import toast from 'react-hot-toast';
 import mime from 'mime-types';
-import path from 'utils/common/path';
+import path, { normalizePath } from 'utils/common/path';
 import { getUniqueTagsFromItems, getCollectionPathKey } from 'utils/collections/index';
-import { normalizePath } from 'utils/common/path';
 import { DEFAULT_HTTP_ITEM_SETTINGS, GRPC_SCRIPT_KEYS, SCRIPT_TYPES } from '@usebruno/common';
 import * as exampleReducers from './exampleReducers';
 import * as mockResponseEditorReducers from './mockResponseEditorReducers';
