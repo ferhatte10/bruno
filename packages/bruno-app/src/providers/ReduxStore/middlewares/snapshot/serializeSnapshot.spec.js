@@ -304,3 +304,49 @@ describe('serializeSnapshot collection environment preservation', () => {
     });
   });
 });
+
+describe('serializeSnapshot pinned collections', () => {
+  it('writes the pinned collections of the active workspace', async () => {
+    const state = makeState();
+    state.collections.pinnedCollectionPaths = [COLLECTION_PATH];
+
+    const snapshot = await serializeSnapshot(state, {
+      getExistingSnapshot: async () => null
+    });
+
+    expect(snapshot.workspaces[0].pinnedCollections).toEqual([COLLECTION_PATH]);
+  });
+
+  it('writes no pinned collections when nothing is pinned', async () => {
+    const snapshot = await serializeSnapshot(makeState(), {
+      getExistingSnapshot: async () => null
+    });
+
+    expect(snapshot.workspaces[0].pinnedCollections).toEqual([]);
+  });
+
+  it('keeps the pinned collections of inactive workspaces from the existing snapshot', async () => {
+    const OTHER_WORKSPACE_PATH = '/tmp/other-workspace';
+    const OTHER_COLLECTION_PATH = '/tmp/other-workspace/collections/billing';
+    const state = makeState();
+    state.workspaces.workspaces.push({
+      uid: 'ws-2',
+      pathname: OTHER_WORKSPACE_PATH,
+      collections: [{ path: OTHER_COLLECTION_PATH }]
+    });
+    const existingSnapshot = makeExistingSnapshot();
+    existingSnapshot.workspaces.push({
+      pathname: OTHER_WORKSPACE_PATH,
+      sorting: 'default',
+      pinnedCollections: [OTHER_COLLECTION_PATH],
+      collections: [OTHER_COLLECTION_PATH]
+    });
+
+    const snapshot = await serializeSnapshot(state, {
+      getExistingSnapshot: async () => existingSnapshot
+    });
+
+    const otherWorkspace = snapshot.workspaces.find((w) => w.pathname === OTHER_WORKSPACE_PATH);
+    expect(otherWorkspace.pinnedCollections).toEqual([OTHER_COLLECTION_PATH]);
+  });
+});

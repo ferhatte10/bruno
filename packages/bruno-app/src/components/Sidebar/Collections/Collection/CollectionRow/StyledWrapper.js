@@ -9,6 +9,14 @@ const Wrapper = styled.div`
     .rotate-90 {
       transform: rotateZ(90deg);
     }
+
+    .collection-pin {
+      flex-shrink: 0;
+    }
+
+    .collection-pin.is-pinned {
+      color: ${(props) => props.theme.colors.text.muted};
+    }
     &.item-hovered {
       border-top: ${(props) => props.theme.dragAndDrop.borderStyle} ${(props) => props.theme.dragAndDrop.border};
       border-bottom: 2px solid transparent;

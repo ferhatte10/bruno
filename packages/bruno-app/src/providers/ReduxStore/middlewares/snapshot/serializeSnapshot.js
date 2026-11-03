@@ -191,12 +191,16 @@ export const serializeSnapshot = async (state, options = {}) => {
     const workspaceSorting = isActiveWorkspace
       ? activeWorkspaceCollectionSortOrder
       : normalizeWorkspaceSorting(existingWorkspace?.sorting);
+    const pinnedCollections = isActiveWorkspace
+      ? [...(collections.pinnedCollectionPaths || [])]
+      : existingWorkspace?.pinnedCollections || [];
 
     snapshot.workspaces.push({
       pathname: workspace.pathname,
       environment: '',
       lastActiveCollectionPathname,
       sorting: workspaceSorting,
+      pinnedCollections,
       activeWorkspaceTabType,
       apiSpecTabs,
       activeApiSpecTabPathname,

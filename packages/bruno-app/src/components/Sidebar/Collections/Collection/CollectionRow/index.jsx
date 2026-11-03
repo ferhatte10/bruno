@@ -22,10 +22,13 @@ import {
   IconBook,
   IconServer,
   IconFileArrowRight,
-  IconAppWindow
+  IconAppWindow,
+  IconPin,
+  IconPinned,
+  IconPinnedOff
 } from '@tabler/icons';
 import OpenAPISyncIcon from 'components/Icons/OpenAPISync';
-import { toggleCollection, collapseFullCollection, clearSidebarSelection } from 'providers/ReduxStore/slices/collections';
+import { toggleCollection, collapseFullCollection, clearSidebarSelection, togglePinnedCollection } from 'providers/ReduxStore/slices/collections';
 import { mountCollection, moveCollectionAndPersist, handleMultipleCollectionItemsDrop, pasteItem, showInFolder, saveCollectionSecurityConfig } from 'providers/ReduxStore/slices/collections/actions';
 import { useDispatch, useSelector, useStore } from 'react-redux';
 import { addTab, makeTabPermanent } from 'providers/ReduxStore/slices/tabs';
@@ -38,7 +41,7 @@ import RemoveCollections from '../RemoveCollections';
 import MoveToWorkspace from '../MoveToWorkspace';
 import { isPathExternalToBasePath } from 'utils/common/path';
 import { doesCollectionHaveItemsMatchingSearchText } from 'utils/collections/search';
-import { getSortedDraggedItems, countInvalidItems } from 'utils/collections';
+import { getSortedDraggedItems, countInvalidItems, isCollectionPathPinned } from 'utils/collections';
 import { isTabForItemActive } from 'src/selectors/tab';
 
 import RenameCollection from '../RenameCollection';
@@ -95,6 +98,8 @@ const CollectionRow = ({ collection, searchText, openBulkMenu, children, isColle
   );
   const workspaces = useSelector((state) => state.workspaces.workspaces);
   const collectionSortOrder = useSelector((state) => state.collections.collectionSortOrder);
+  const pinnedCollectionPaths = useSelector((state) => state.collections.pinnedCollectionPaths);
+  const isPinned = isCollectionPathPinned(pinnedCollectionPaths, collection.pathname);
   const store = useStore();
   const isMoveToWorkspaceVisible = isPathExternalToBasePath(activeWorkspace?.pathname, collection.pathname);
 
@@ -207,6 +212,11 @@ const CollectionRow = ({ collection, searchText, openBulkMenu, children, isColle
     if (_menuDropdown) {
       _menuDropdown.toggle();
     }
+  };
+
+  const handleTogglePin = (event) => {
+    event?.stopPropagation();
+    dispatch(togglePinnedCollection({ pathname: collection.pathname }));
   };
 
   const handleCollapseFullCollection = () => {
@@ -325,6 +335,7 @@ const CollectionRow = ({ collection, searchText, openBulkMenu, children, isColle
           workspaces,
           activeWorkspace,
           collectionSortOrder,
+          pinnedCollectionPaths,
           searchText
         });
 
@@ -344,6 +355,7 @@ const CollectionRow = ({ collection, searchText, openBulkMenu, children, isColle
           workspaces,
           activeWorkspace,
           collectionSortOrder,
+          pinnedCollectionPaths,
           searchText
         });
 
@@ -411,6 +423,13 @@ const CollectionRow = ({ collection, searchText, openBulkMenu, children, isColle
         ensureCollectionIsMounted();
         setShowNewAppModal(true);
       }
+    },
+    {
+      id: 'pin',
+      leftSection: isPinned ? IconPinnedOff : IconPin,
+      label: isPinned ? 'Unpin' : 'Pin to Top',
+      testId: 'pin-collection',
+      onClick: () => handleTogglePin()
     },
     {
       id: 'run',
@@ -605,6 +624,17 @@ const CollectionRow = ({ collection, searchText, openBulkMenu, children, isColle
           <InvalidFilesBadge count={invalidItemCount} collectionUid={collection.uid} rowUid={collection.uid} />
           {isLoading ? <IconLoader2 className="animate-spin flex-shrink-0 mx-1 ml-auto" size={18} strokeWidth={1.5} /> : null}
         </div>
+        {!isDragging && (
+          <ActionIcon
+            className={classnames('collection-pin', { 'collection-actions': !isPinned, 'is-pinned': isPinned })}
+            label={isPinned ? 'Unpin collection' : 'Pin collection to top'}
+            aria-pressed={isPinned}
+            onClick={handleTogglePin}
+            data-testid="collection-pin-toggle"
+          >
+            {isPinned ? <IconPinned size={14} strokeWidth={1.5} /> : <IconPin size={14} strokeWidth={1.5} />}
+          </ActionIcon>
+        )}
         {!isDragging && !isMultiSelected && (
           <div>
             <div className="pr-2">

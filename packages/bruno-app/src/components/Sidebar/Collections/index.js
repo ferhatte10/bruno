@@ -14,7 +14,7 @@ import useBulkActionsMenu from 'hooks/useBulkActionsMenu';
 import useDebounce from 'hooks/useDebounce';
 import useSidebarAutoReveal from 'hooks/useSidebarAutoReveal';
 import BulkActionsMenu from 'components/Sidebar/Collections/BulkActionsMenu';
-import { selectCollections, selectCollectionSortOrder, selectSelectedSidebarUids } from 'src/selectors/collections';
+import { selectCollections, selectCollectionSortOrder, selectPinnedCollectionPaths, selectSelectedSidebarUids } from 'src/selectors/collections';
 
 const isEmptyQuery = (value) => typeof value === 'string' && value.trim() === '';
 
@@ -24,6 +24,7 @@ const Collections = ({ showSearch, isCreatingCollection, onCreateClick, onDismis
   const debouncedSearchText = useDebounce(trimmedSearchText, 300, { shouldSkipDebounce: isEmptyQuery });
   const collections = useSelector(selectCollections);
   const collectionSortOrder = useSelector(selectCollectionSortOrder);
+  const pinnedCollectionPaths = useSelector(selectPinnedCollectionPaths);
   const selectedSidebarUids = useSelector(selectSelectedSidebarUids);
   const workspaces = useSelector((state) => state.workspaces.workspaces);
   const activeWorkspaceUid = useSelector((state) => state.workspaces.activeWorkspaceUid);
@@ -40,8 +41,8 @@ const Collections = ({ showSearch, isCreatingCollection, onCreateClick, onDismis
   // a "ghost" git-backed entry whose local folder is missing (rendered via
   // <GitRemoteCollectionRow /> so the user can click to clone it).
   const sidebarEntries = useMemo(
-    () => buildSidebarEntries({ collections, workspaces, activeWorkspace, collectionSortOrder }),
-    [activeWorkspace, collections, workspaces, collectionSortOrder]
+    () => buildSidebarEntries({ collections, workspaces, activeWorkspace, collectionSortOrder, pinnedCollectionPaths }),
+    [activeWorkspace, collections, workspaces, collectionSortOrder, pinnedCollectionPaths]
   );
 
   // Flatten the tree into ordered rows. itemsByUid / collectionsByUid resolve a row's live object.

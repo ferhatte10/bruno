@@ -70,6 +70,7 @@ export const SAVE_TRIGGERS = new Map([
   ['workspaces/setActiveWorkspace', null],
   ['collections/selectEnvironment', null],
   ['collections/sortCollections', null],
+  ['collections/togglePinnedCollection', null],
   ['collections/updateCollectionMountStatus', null],
   ['collections/toggleCollection', null],
   ['collections/expandCollection', null],
@@ -164,6 +165,9 @@ const normalizeWorkspaceSnapshotEntry = (pathname, entry = {}) => {
       ? entry.lastActiveCollectionPathname
       : null,
     sorting: typeof entry.sorting === 'string' ? entry.sorting : 'default',
+    pinnedCollections: Array.isArray(entry.pinnedCollections)
+      ? entry.pinnedCollections.filter((pathname) => typeof pathname === 'string').map((pathname) => normalizePath(pathname)).filter(Boolean)
+      : [],
     activeWorkspaceTabType: WORKSPACE_TAB_TYPES.has(entry.activeWorkspaceTabType)
       ? entry.activeWorkspaceTabType
       : null,
@@ -265,6 +269,7 @@ export const hydrateSnapshotLookups = (snapshot = {}) => {
         pathname: workspace.pathname,
         lastActiveCollectionPathname: workspace.lastActiveCollectionPathname,
         sorting: workspace.sorting,
+        pinnedCollections: workspace.pinnedCollections,
         activeWorkspaceTabType: workspace.activeWorkspaceTabType,
         apiSpecTabs: workspace.apiSpecTabs,
         activeApiSpecTabPathname: workspace.activeApiSpecTabPathname,

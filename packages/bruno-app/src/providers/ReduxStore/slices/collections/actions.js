@@ -2757,11 +2757,11 @@ export const selectEnvironment = (environmentUid, collectionUid) => (dispatch, g
 
 export const selectSidebarRange = ({ uid, searchText }) => (dispatch, getState) => {
   const state = getState();
-  const { collections, collectionSortOrder, lastClickedSidebarUid } = state.collections;
+  const { collections, collectionSortOrder, pinnedCollectionPaths, lastClickedSidebarUid } = state.collections;
   const { workspaces, activeWorkspaceUid } = state.workspaces;
   const activeWorkspace = workspaces.find((w) => w.uid === activeWorkspaceUid) || workspaces.find((w) => w.type === 'default');
 
-  const sidebarEntries = buildSidebarEntries({ collections, workspaces, activeWorkspace, collectionSortOrder });
+  const sidebarEntries = buildSidebarEntries({ collections, workspaces, activeWorkspace, collectionSortOrder, pinnedCollectionPaths });
   const visibleUids = getVisibleSidebarUidsInOrder({ sidebarEntries, searchText });
 
   const clickedIndex = visibleUids.indexOf(uid);

@@ -12,7 +12,9 @@ const {
   clearSidebarSelection,
   setLastClickedSidebarUid,
   collapseItem,
-  expandItem
+  expandItem,
+  setPinnedCollections,
+  togglePinnedCollection
 } = collectionsSlice.actions;
 const reducer = collectionsSlice.reducer;
 
@@ -292,5 +294,32 @@ describe('updateVar — dataType is only changed when the caller says so', () =>
     const vars = reqVarsAfter({ uid: 'v1', name: 'count', value: 'true', enabled: true, dataType: 'boolean' });
 
     expect(vars[0]).toMatchObject({ value: 'true', dataType: 'boolean' });
+  });
+});
+
+describe('pinned collections', () => {
+  const emptyState = () => ({ collections: [], pinnedCollectionPaths: [] });
+
+  it('pins a collection that is not pinned yet', () => {
+    const state = reducer(emptyState(), togglePinnedCollection({ pathname: '/ws/api' }));
+    expect(state.pinnedCollectionPaths).toEqual(['/ws/api']);
+  });
+
+  it('unpins a collection that is already pinned', () => {
+    const pinned = reducer(emptyState(), togglePinnedCollection({ pathname: '/ws/api' }));
+    const state = reducer(pinned, togglePinnedCollection({ pathname: '/ws/api' }));
+    expect(state.pinnedCollectionPaths).toEqual([]);
+  });
+
+  it('leaves other pinned collections untouched when unpinning one', () => {
+    const start = { collections: [], pinnedCollectionPaths: ['/ws/a', '/ws/b', '/ws/c'] };
+    const state = reducer(start, togglePinnedCollection({ pathname: '/ws/b' }));
+    expect(state.pinnedCollectionPaths).toEqual(['/ws/a', '/ws/c']);
+  });
+
+  it('replaces pinned collections when restoring them for a workspace', () => {
+    const start = { collections: [], pinnedCollectionPaths: ['/old'] };
+    const state = reducer(start, setPinnedCollections({ paths: ['/ws/a', '/ws/b'] }));
+    expect(state.pinnedCollectionPaths).toEqual(['/ws/a', '/ws/b']);
   });
 });

@@ -14,6 +14,7 @@ const defaults = () => ({
   collections: {
     collections: [],
     collectionSortOrder: 'default',
+    pinnedCollectionPaths: [],
     activeConnections: [],
     selectedSidebarUids: [],
     lastClickedSidebarUid: null,

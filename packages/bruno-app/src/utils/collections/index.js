@@ -2128,6 +2128,21 @@ export const getVariableNamesWithScope = (collection, item) => {
 
 const sidebarEntryCollator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
 
+/**
+ * Comparable key for a collection path: normalized, and case-insensitive on Windows.
+ * Used wherever two collection paths need to be matched (workspace.yml vs loaded collections, pins).
+ */
+export const getCollectionPathKey = (pathname) => {
+  const key = normalizePath(pathname || '');
+  return isWindowsOS() ? key.toLowerCase() : key;
+};
+
+export const isCollectionPathPinned = (pinnedCollectionPaths = [], pathname) => {
+  if (!pathname || !pinnedCollectionPaths?.length) return false;
+  const key = getCollectionPathKey(pathname);
+  return pinnedCollectionPaths.some((p) => getCollectionPathKey(p) === key);
+};
+
 const getSidebarEntryName = (entry) => {
   if (entry.kind === 'loaded') {
     return entry.collection?.name || '';
@@ -2142,7 +2157,13 @@ const getSidebarEntryName = (entry) => {
  * between Collections/index.js's render and the shift-select range thunk so both agree on
  * ordering — see Collections/index.js for the rendering this mirrors.
  */
-export const buildSidebarEntries = ({ collections = [], workspaces = [], activeWorkspace, collectionSortOrder }) => {
+export const buildSidebarEntries = ({
+  collections = [],
+  workspaces = [],
+  activeWorkspace,
+  collectionSortOrder,
+  pinnedCollectionPaths = []
+}) => {
   if (!activeWorkspace?.collections?.length) return [];
 
   const isDefaultWorkspace = activeWorkspace?.type === 'default';
@@ -2151,35 +2172,43 @@ export const buildSidebarEntries = ({ collections = [], workspaces = [], activeW
   for (const c of collections) {
     if (isScratchCollection(c, workspaces)) continue;
     if (c.pathname) {
-      let key = normalizePath(c.pathname);
-      if (isWindowsOS()) key = key.toLowerCase();
-      loadedByPath.set(key, c);
+      loadedByPath.set(getCollectionPathKey(c.pathname), c);
     }
   }
 
   const entries = [];
   for (const wc of activeWorkspace.collections) {
     if (!wc.path) continue;
-    let key = normalizePath(wc.path);
-    if (isWindowsOS()) key = key.toLowerCase();
+    const key = getCollectionPathKey(wc.path);
 
     const loaded = loadedByPath.get(key);
     if (loaded) {
-      entries.push({ kind: 'loaded', collection: loaded, key: loaded.uid });
+      entries.push({ kind: 'loaded', collection: loaded, key: loaded.uid, pathKey: key });
     } else if (wc.remote && !isDefaultWorkspace) {
-      entries.push({ kind: 'ghost', entry: wc, key: `ghost:${wc.path}` });
+      entries.push({ kind: 'ghost', entry: wc, key: `ghost:${wc.path}`, pathKey: key });
     }
   }
 
+  let sortedEntries = entries;
   if (collectionSortOrder === 'alphabetical') {
-    return [...entries].sort((a, b) => sidebarEntryCollator.compare(getSidebarEntryName(a), getSidebarEntryName(b)));
+    sortedEntries = [...entries].sort((a, b) => sidebarEntryCollator.compare(getSidebarEntryName(a), getSidebarEntryName(b)));
+  } else if (collectionSortOrder === 'reverseAlphabetical') {
+    sortedEntries = [...entries].sort((a, b) => -sidebarEntryCollator.compare(getSidebarEntryName(a), getSidebarEntryName(b)));
   }
 
-  if (collectionSortOrder === 'reverseAlphabetical') {
-    return [...entries].sort((a, b) => -sidebarEntryCollator.compare(getSidebarEntryName(a), getSidebarEntryName(b)));
+  if (!pinnedCollectionPaths?.length) {
+    return sortedEntries;
   }
 
-  return entries;
+  // Pinned collections float to the top. Within each group the active sort order is kept as-is,
+  // so pinning never fights with the user's chosen sort.
+  const pinnedKeys = new Set(pinnedCollectionPaths.map(getCollectionPathKey));
+  const pinned = [];
+  const unpinned = [];
+  for (const entry of sortedEntries) {
+    (pinnedKeys.has(entry.pathKey) ? pinned : unpinned).push(entry);
+  }
+  return [...pinned, ...unpinned];
 };
 
 /**
@@ -2709,6 +2738,7 @@ export const getOtherCollections = (allCollections, uids) => {
  * @param {Array} workspaces - Array of workspaces
  * @param {Object} activeWorkspace - The active workspace
  * @param {string} collectionSortOrder - The collection sort order
+ * @param {string[]} pinnedCollectionPaths - Pathnames of collections pinned to the top
  * @param {string} searchText - The search text
  * @returns {Array} Array of sorted dragged items
  */
@@ -2718,6 +2748,7 @@ export const getSortedDraggedItems = ({
   workspaces,
   activeWorkspace,
   collectionSortOrder,
+  pinnedCollectionPaths,
   searchText
 }) => {
   let draggedItems = [];
@@ -2735,7 +2766,8 @@ export const getSortedDraggedItems = ({
     collections: allCollections,
     workspaces,
     activeWorkspace,
-    collectionSortOrder
+    collectionSortOrder,
+    pinnedCollectionPaths
   });
 
   const visibleUids = getVisibleSidebarUidsInOrder({ sidebarEntries, searchText });

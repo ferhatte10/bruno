@@ -94,6 +94,7 @@ const workspaceSchema = yup.object({
   lastActiveCollectionPathname: yup.string().nullable(),
   activeWorkspaceTabType: yup.string().oneOf([...WORKSPACE_TAB_TYPES, null]).nullable(),
   sorting: yup.mixed().oneOf(['alphabetical', 'reverseAlphabetical', 'default']),
+  pinnedCollections: yup.array().of(yup.string()).optional(),
   apiSpecTabs: yup.array().of(yup.string()).optional(),
   activeApiSpecTabPathname: yup.string().nullable(),
   collections: yup.array().of(yup.string()).optional()
@@ -524,6 +525,7 @@ class SnapshotManager {
         ? workspace.activeWorkspaceTabType
         : null,
       sorting: typeof workspace.sorting === 'string' ? workspace.sorting : 'default',
+      pinnedCollections: this._normalizePathList(workspace.pinnedCollections),
       apiSpecTabs: this._normalizePathList(workspace.apiSpecTabs),
       activeApiSpecTabPathname: typeof workspace.activeApiSpecTabPathname === 'string'
         ? workspace.activeApiSpecTabPathname

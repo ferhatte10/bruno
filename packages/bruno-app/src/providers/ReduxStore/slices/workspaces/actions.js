@@ -9,7 +9,7 @@ import {
   setWorkspaceScratchCollection
 } from '../workspaces';
 import { createCollection, openMultipleCollections, openScratchCollectionEvent, mountCollection, hydrateCollectionWithUiStateSnapshot } from '../collections/actions';
-import { removeCollection, addTransientDirectory, updateCollectionMountStatus, expandCollection, sortCollections } from '../collections';
+import { removeCollection, addTransientDirectory, updateCollectionMountStatus, expandCollection, sortCollections, setPinnedCollections } from '../collections';
 import { sanitizeName } from 'utils/common/regex';
 import { clearCollectionState } from '../openapi-sync';
 import { updateGlobalEnvironments } from '../global-environments';
@@ -643,6 +643,7 @@ export const switchWorkspace = (workspaceUid) => {
         : null;
       const snapshotCollectionSortOrder = normalizeCollectionSortOrder(workspaceSnapshot?.sorting);
       dispatch(sortCollections({ order: snapshotCollectionSortOrder }));
+      dispatch(setPinnedCollections({ paths: workspaceSnapshot?.pinnedCollections || [] }));
 
       // Load global environments
       const envResult = await ipcRenderer.invoke('renderer:get-global-environments', {

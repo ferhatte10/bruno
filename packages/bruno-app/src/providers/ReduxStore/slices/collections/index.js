@@ -22,7 +22,8 @@ import { getSubdirectoriesFromRoot } from 'utils/common/platform';
 import toast from 'react-hot-toast';
 import mime from 'mime-types';
 import path from 'utils/common/path';
-import { getUniqueTagsFromItems } from 'utils/collections/index';
+import { getUniqueTagsFromItems, getCollectionPathKey } from 'utils/collections/index';
+import { normalizePath } from 'utils/common/path';
 import { DEFAULT_HTTP_ITEM_SETTINGS, GRPC_SCRIPT_KEYS, SCRIPT_TYPES } from '@usebruno/common';
 import * as exampleReducers from './exampleReducers';
 import * as mockResponseEditorReducers from './mockResponseEditorReducers';
@@ -198,6 +199,7 @@ const mergeRootWithPreservedUids = (existingRoot, newRoot) =>
 const initialState = {
   collections: [],
   collectionSortOrder: 'default',
+  pinnedCollectionPaths: [],
   activeConnections: [],
   selectedSidebarUids: [],
   lastClickedSidebarUid: null,
@@ -351,6 +353,16 @@ export const collectionsSlice = createSlice({
     },
     removeCollection: (state, action) => {
       state.collections = filter(state.collections, (c) => c.uid !== action.payload.collectionUid);
+    },
+    setPinnedCollections: (state, action) => {
+      state.pinnedCollectionPaths = action.payload.paths;
+    },
+    togglePinnedCollection: (state, action) => {
+      const key = getCollectionPathKey(action.payload.pathname);
+      const isPinned = state.pinnedCollectionPaths.some((p) => getCollectionPathKey(p) === key);
+      state.pinnedCollectionPaths = isPinned
+        ? state.pinnedCollectionPaths.filter((p) => getCollectionPathKey(p) !== key)
+        : [...state.pinnedCollectionPaths, normalizePath(action.payload.pathname)];
     },
     sortCollections: (state, action) => {
       state.collectionSortOrder = action.payload.order;
@@ -4324,6 +4336,8 @@ export const {
   renameCollection,
   removeCollection,
   sortCollections,
+  setPinnedCollections,
+  togglePinnedCollection,
   updateLastAction,
   updateSettingsSelectedTab,
   updatedFolderSettingsSelectedTab,

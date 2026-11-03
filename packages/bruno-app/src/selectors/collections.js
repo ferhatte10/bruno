@@ -28,6 +28,8 @@ export const selectCollectionByUid = (state, collectionUid) =>
 
 export const selectCollectionSortOrder = (state) => state.collections.collectionSortOrder;
 
+export const selectPinnedCollectionPaths = (state) => state.collections.pinnedCollectionPaths;
+
 export const selectSelectedSidebarUids = (state) => state.collections.selectedSidebarUids;
 
 export const selectActiveWorkspace = (state) => {

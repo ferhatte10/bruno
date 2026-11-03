@@ -107,6 +107,7 @@ const CollectionItemRow = ({
   const activeWorkspaceUid = useSelector((state) => state.workspaces.activeWorkspaceUid);
   const activeWorkspace = workspaces?.find((w) => w.uid === activeWorkspaceUid);
   const collectionSortOrder = useSelector((state) => state.collections.collectionSortOrder);
+  const pinnedCollectionPaths = useSelector((state) => state.collections.pinnedCollectionPaths);
   const dispatch = useDispatch();
 
   const multiDragItems = isMultiSelected ? multiDragItemsForSelection : null;
@@ -247,6 +248,7 @@ const CollectionItemRow = ({
         workspaces,
         activeWorkspace,
         collectionSortOrder,
+        pinnedCollectionPaths,
         searchText
       });
 
